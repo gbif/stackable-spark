@@ -10,7 +10,7 @@
         <version>53</version>
     </parent>
 
-    <groupId>org.example</groupId>
+    <groupId>org.gbif.stackable</groupId>
     <artifactId>stackable-spark</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
