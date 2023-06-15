@@ -1,0 +1,16 @@
+livingatlas/configs/la-pipelines-local.yaml
+.idea
+*.iml
+*.log
+*.log.*
+*.crc
+target
+output
+java-generated
+bin
+.DS_Store
+logs
+log
+temp
+tmp
+**/dependency-reduced-pom.xml

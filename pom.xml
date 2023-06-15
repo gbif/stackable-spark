@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.gbif</groupId>
+        <artifactId>motherpom</artifactId>
+        <version>53</version>
+    </parent>
+
+    <groupId>org.example</groupId>
+    <artifactId>stackable-spark</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <scm>
+        <connection>scm:git:git@github.com:gbif/stackable-spark.git</connection>
+        <url>https://github.com/gbif/stackable-spark</url>
+        <developerConnection>scm:git:git@github.com:gbif/stackable-spark.git</developerConnection>
+    </scm>
+
+    <distributionManagement>
+        <site>
+            <id>gh-pages</id>
+            <url>https://gbif.github.io/stackable-spark/</url>
+        </site>
+        <repository>
+            <id>gbif-release</id>
+            <url>https://repository.gbif.org/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>gbif-snapshot</id>
+            <url>https://repository.gbif.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>gbif-release</id>
+            <url>https://repository.gbif.org/repository/releases/</url>
+        </repository>
+        <repository>
+            <id>gbif-snapshot</id>
+            <url>https://repository.gbif.org/repository/snapshots/</url>
+        </repository>
+    </repositories>
+
+    <properties>
+        <!-- General settings -->
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependencies -->
+        <io.kubernetes.client.version>18.0.0</io.kubernetes.client.version>
+        <snakeyaml.version>1.27</snakeyaml.version>
+        <jackson.version>2.12.2</jackson.version>
+        <lombok.version>1.18.20</lombok.version>
+        <junit.jupiter.version>5.9.3</junit.jupiter.version>
+        <gson.version>2.10.1</gson.version>
+        <slf4j.version>2.0.6</slf4j.version>
+
+        <!-- Plugins -->
+        <spotless-maven-plugin.version>2.22.8</spotless-maven-plugin.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- Runs in compile phase to fail fast in case of formatting issues.-->
+                        <id>spotless-check</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-XepDisableWarningsInGeneratedCode</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>false</filtering>
+            </testResource>
+        </testResources>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java</artifactId>
+            <version>${io.kubernetes.client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java-api</artifactId>
+            <version>${io.kubernetes.client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <!-- To avoid NoSuchMethod org.yaml.snakeyaml.parser.ParserImpl.<init>(Lorg/yaml/snakeyaml/reader/StreamReader;)V-->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
