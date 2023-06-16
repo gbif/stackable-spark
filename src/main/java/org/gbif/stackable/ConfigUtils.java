@@ -15,8 +15,9 @@
  */
 package org.gbif.stackable;
 
-import java.io.FileReader;
 import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -48,7 +49,7 @@ public class ConfigUtils {
 
   @SneakyThrows
   public static KubeConfig loadKubeConfig(String kubeConfigFile) {
-    try (FileReader kubeConfigReader = new FileReader(Paths.get(kubeConfigFile).toFile())) {
+    try (Reader kubeConfigReader = Files.newBufferedReader(Paths.get(kubeConfigFile).toFile().toPath(), StandardCharsets.UTF_8)) {
       return KubeConfig.loadKubeConfig(kubeConfigReader);
     }
   }

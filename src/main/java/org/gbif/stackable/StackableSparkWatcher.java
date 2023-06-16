@@ -18,6 +18,9 @@ package org.gbif.stackable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.reflect.TypeToken;
@@ -70,6 +73,10 @@ public class StackableSparkWatcher implements Runnable, Closeable {
 
   private final EventsListener eventsListener;
 
+  private final Map<String,String> labelSelector;
+
+  private final Map<String,String> fieldSelector;
+
   private boolean stop = false;
 
   @SneakyThrows
@@ -78,14 +85,18 @@ public class StackableSparkWatcher implements Runnable, Closeable {
   }
 
   @SneakyThrows
-  public StackableSparkWatcher(KubeConfig kubeConfig, EventsListener eventsListener) {
+  public StackableSparkWatcher(KubeConfig kubeConfig, EventsListener eventsListener, Map<String,String> labelSelector, Map<String,String> fieldSelector) {
     this.kubeConfig = kubeConfig;
     this.eventsListener = eventsListener;
+    this.fieldSelector = fieldSelector;
+    this.labelSelector = labelSelector;
   }
 
   public StackableSparkWatcher(KubeConfig kubeConfig) {
     this.kubeConfig = kubeConfig;
     this.eventsListener = new LogEventsListener();
+    this.labelSelector = Collections.emptyMap();
+    this.fieldSelector = Collections.emptyMap();
   }
 
   /** Creates a started Thread with the current instance as Runnable. */
@@ -125,8 +136,8 @@ public class StackableSparkWatcher implements Runnable, Closeable {
                   null,
                   null,
                   null,
-                  null,
-                  null,
+                  toSelectorQuery(fieldSelector),
+                  toSelectorQuery(labelSelector),
                   null,
                   null,
                   null,
@@ -144,6 +155,14 @@ public class StackableSparkWatcher implements Runnable, Closeable {
         }
       }
     }
+  }
+
+  /** Takes a K8 selector Map<String,String> and returns a string in the format: key1=value1,..,keyN=valueN. */
+  private String toSelectorQuery(Map<String,String> selector) {
+    if (selector != null && !selector.isEmpty()) {
+      return selector.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(","));
+    }
+    return null;
   }
 
   /** Stops the watcher. */

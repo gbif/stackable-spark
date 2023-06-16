@@ -16,6 +16,7 @@
 package org.gbif.stackable;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -67,6 +68,10 @@ public class SparkCrd implements ToBuilder {
 
     /** K8 namespace. */
     private final String namespace;
+
+    /** Labels to be added to the K8 Pod or custom resource.*/
+    @Builder.Default
+    private final Map<String,String> labels = Collections.emptyMap();
   }
 
   @Data
