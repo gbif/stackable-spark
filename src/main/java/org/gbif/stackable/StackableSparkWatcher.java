@@ -43,7 +43,7 @@ public class StackableSparkWatcher implements Runnable, Closeable {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   /** Event listener interface called on every update it gets from K8. */
-  interface EventsListener {
+  public interface EventsListener {
     void onEvent(
         EventType eventType,
         String appName,
