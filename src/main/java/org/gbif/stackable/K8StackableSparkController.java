@@ -25,6 +25,7 @@ import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,10 +111,15 @@ public class K8StackableSparkController {
     }
   }
 
-  @SneakyThrows
   public AbstractMap<String, Object> submitSparkApplication(String applicationId) {
+    return submitSparkApplication(sparkCrd, applicationId);
+  }
+
+  @SneakyThrows
+  public AbstractMap<String, Object> submitSparkApplication(
+      @NonNull SparkCrd crd, String applicationId) {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
-    SparkCrd sparkPodConfig = cloneAndRename(sparkCrd, applicationId);
+    SparkCrd sparkPodConfig = cloneAndRename(crd, applicationId);
     try {
       deleteIfExists(applicationId);
       return (AbstractMap<String, Object>)
