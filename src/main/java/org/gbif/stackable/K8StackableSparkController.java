@@ -18,7 +18,6 @@ package org.gbif.stackable;
 import java.util.AbstractMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
@@ -29,7 +28,10 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.stackable.SparkAppUtils.*;
+import static org.gbif.stackable.SparkAppUtils.STACKABLE_SPARK_GROUP;
+import static org.gbif.stackable.SparkAppUtils.STACKABLE_SPARK_PLURAL;
+import static org.gbif.stackable.SparkAppUtils.STACKABLE_SPARK_VERSION;
+import static org.gbif.stackable.SparkAppUtils.getPhase;
 
 @Slf4j
 public class K8StackableSparkController {
@@ -39,6 +41,7 @@ public class K8StackableSparkController {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private interface AppOperation {
+
     AbstractMap<String, Object> apply(String applicationId) throws ApiException;
   }
 
@@ -91,51 +94,40 @@ public class K8StackableSparkController {
     }
   }
 
-  @SneakyThrows
-  public Phase getApplicationPhase(String applicationId) {
+  public Phase getApplicationPhase(String applicationId) throws ApiException {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
-    try {
-      AbstractMap<String, Object> status =
-          (AbstractMap<String, Object>)
-              customObjectsApi.getNamespacedCustomObjectStatus(
-                  STACKABLE_SPARK_GROUP,
-                  STACKABLE_SPARK_VERSION,
-                  kubeConfig.getNamespace(),
-                  STACKABLE_SPARK_PLURAL,
-                  applicationId);
-      return getPhase(status, Phase.INITIATING);
-    } catch (ApiException apiException) {
-      log.error(
-          "Error getting Spark application status {}", errorToString(apiException), apiException);
-      throw new RuntimeException(apiException);
-    }
+    AbstractMap<String, Object> status =
+        (AbstractMap<String, Object>)
+            customObjectsApi.getNamespacedCustomObjectStatus(
+                STACKABLE_SPARK_GROUP,
+                STACKABLE_SPARK_VERSION,
+                kubeConfig.getNamespace(),
+                STACKABLE_SPARK_PLURAL,
+                applicationId);
+    return getPhase(status, Phase.INITIATING);
   }
 
-  public AbstractMap<String, Object> submitSparkApplication(String applicationId) {
+  public AbstractMap<String, Object> submitSparkApplication(String applicationId) throws ApiException {
     return submitSparkApplication(sparkCrd, applicationId);
   }
 
-  @SneakyThrows
   public AbstractMap<String, Object> submitSparkApplication(
-      @NonNull SparkCrd crd, String applicationId) {
+      @NonNull SparkCrd crd, String applicationId) throws ApiException {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
     SparkCrd sparkPodConfig = cloneAndRename(crd, applicationId);
-    try {
-      deleteIfExists(applicationId);
-      return (AbstractMap<String, Object>)
-          customObjectsApi.createNamespacedCustomObject(
-              STACKABLE_SPARK_GROUP,
-              STACKABLE_SPARK_VERSION,
-              kubeConfig.getNamespace(),
-              STACKABLE_SPARK_PLURAL,
-              sparkPodConfig,
-              "true",
-              null,
-              null);
-    } catch (ApiException apiException) {
-      log.error("Error submitting Spark application {}", errorToString(apiException), apiException);
-      throw new RuntimeException(apiException);
-    }
+
+    deleteIfExists(applicationId);
+    return (AbstractMap<String, Object>)
+        customObjectsApi.createNamespacedCustomObject(
+            STACKABLE_SPARK_GROUP,
+            STACKABLE_SPARK_VERSION,
+            kubeConfig.getNamespace(),
+            STACKABLE_SPARK_PLURAL,
+            sparkPodConfig,
+            "true",
+            null,
+            null);
+
   }
 
   @SneakyThrows
