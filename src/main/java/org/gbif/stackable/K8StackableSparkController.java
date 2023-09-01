@@ -16,6 +16,8 @@
 package org.gbif.stackable;
 
 import java.util.AbstractMap;
+import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -112,12 +114,21 @@ public class K8StackableSparkController {
     return submitSparkApplication(sparkCrd, applicationId);
   }
 
+  public AbstractMap<String, Object> submitSparkApplication(@NonNull SparkCrd crd) throws ApiException {
+    return submitSparkApplication(crd, null);
+  }
+
   public AbstractMap<String, Object> submitSparkApplication(
       @NonNull SparkCrd crd, String applicationId) throws ApiException {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
-    SparkCrd sparkPodConfig = cloneAndRename(crd, applicationId);
 
-    deleteIfExists(applicationId);
+    SparkCrd sparkPodConfig = Optional.ofNullable(applicationId).map(aid -> cloneAndRename(crd, aid)).orElse(crd);
+    String name = Optional.ofNullable(applicationId).orElse(sparkPodConfig.getMetadata().getName());
+
+    Objects.requireNonNull(sparkPodConfig, "Pod configuraion can't be null");
+    Objects.requireNonNull(name, "Application name configuraion can't be null");
+
+    deleteIfExists(name);
     return (AbstractMap<String, Object>)
         customObjectsApi.createNamespacedCustomObject(
             STACKABLE_SPARK_GROUP,
