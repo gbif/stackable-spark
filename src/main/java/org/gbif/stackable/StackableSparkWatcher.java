@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,6 +78,8 @@ public class StackableSparkWatcher implements Runnable, Closeable {
 
   private final Map<String,String> fieldSelector;
 
+  private final Pattern nameSelector;
+
   private boolean stop = false;
 
   @SneakyThrows
@@ -85,11 +88,12 @@ public class StackableSparkWatcher implements Runnable, Closeable {
   }
 
   @SneakyThrows
-  public StackableSparkWatcher(KubeConfig kubeConfig, EventsListener eventsListener, Map<String,String> labelSelector, Map<String,String> fieldSelector) {
+  public StackableSparkWatcher(KubeConfig kubeConfig, EventsListener eventsListener, Map<String,String> labelSelector, Map<String,String> fieldSelector, String nameSelector) {
     this.kubeConfig = kubeConfig;
     this.eventsListener = eventsListener;
     this.fieldSelector = fieldSelector;
     this.labelSelector = labelSelector;
+    this.nameSelector = nameSelector != null? Pattern.compile(nameSelector) : null;
   }
 
   public StackableSparkWatcher(KubeConfig kubeConfig) {
@@ -97,6 +101,7 @@ public class StackableSparkWatcher implements Runnable, Closeable {
     this.eventsListener = new LogEventsListener();
     this.labelSelector = Collections.emptyMap();
     this.fieldSelector = Collections.emptyMap();
+    this.nameSelector = null;
   }
 
   /** Creates a started Thread with the current instance as Runnable. */
@@ -151,10 +156,21 @@ public class StackableSparkWatcher implements Runnable, Closeable {
           EventType eventType = EventType.valueOf(item.type);
           K8StackableSparkController.Phase phase = getPhase(object);
           String appName = getAppName(object);
-          eventsListener.onEvent(eventType, appName, phase, object);
+          if (matchesNameSelector(appName)) {
+            eventsListener.onEvent(eventType, appName, phase, object);
+          }
         }
+        System.out.println("SSSS");
       }
     }
+  }
+
+  /**
+   * Matches a string to the name pattern.
+   * Null name selector matches all applications.
+   */
+  private boolean matchesNameSelector(String appName) {
+    return nameSelector == null || nameSelector.matcher(appName).matches();
   }
 
   /** Takes a K8 selector Map<String,String> and returns a string in the format: key1=value1,..,keyN=valueN. */
