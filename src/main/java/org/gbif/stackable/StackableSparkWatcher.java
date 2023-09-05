@@ -16,7 +16,6 @@
 package org.gbif.stackable;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Map;
@@ -87,12 +86,19 @@ public class StackableSparkWatcher implements Runnable, Closeable {
     return new StackableSparkWatcher(ConfigUtils.loadKubeConfig(kubeConfigFile));
   }
 
-  @SneakyThrows
   public StackableSparkWatcher(KubeConfig kubeConfig, EventsListener eventsListener, Map<String,String> labelSelector, Map<String,String> fieldSelector, String nameSelector) {
     this.kubeConfig = kubeConfig;
     this.eventsListener = eventsListener;
     this.fieldSelector = fieldSelector;
     this.labelSelector = labelSelector;
+    this.nameSelector = nameSelector != null? Pattern.compile(nameSelector) : null;
+  }
+
+  public StackableSparkWatcher(KubeConfig kubeConfig, EventsListener eventsListener, String nameSelector) {
+    this.kubeConfig = kubeConfig;
+    this.eventsListener = eventsListener;
+    this.fieldSelector = Collections.emptyMap();
+    this.labelSelector = Collections.emptyMap();
     this.nameSelector = nameSelector != null? Pattern.compile(nameSelector) : null;
   }
 
@@ -187,7 +193,7 @@ public class StackableSparkWatcher implements Runnable, Closeable {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     stop();
   }
 }
