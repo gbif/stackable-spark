@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -68,16 +69,16 @@ public class SparkCrd implements ToBuilder {
 
     /** K8 namespace. */
     private final String namespace;
-
-    /** Labels to be added to the K8 Pod or custom resource.*/
-    @Builder.Default
-    private final Map<String,String> labels = Collections.emptyMap();
   }
 
   @Data
   @Builder(toBuilder = true)
   @Jacksonized
   public static class Spec implements ToBuilder {
+
+    /** Pod overrides */
+    private final RoleGroups roleGroups;
+
     /** Application version */
     private final String version;
 
@@ -144,6 +145,40 @@ public class SparkCrd implements ToBuilder {
 
     /** Log file directory settings. */
     private final LogFileDirectory logFileDirectory;
+
+    @Data
+    @Builder(toBuilder = true)
+    @Jacksonized
+    public static class RoleGroups implements ToBuilder {
+
+      @JsonProperty("default")
+      private final Default _default;
+
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      public static class Default implements ToBuilder {
+
+        private final PodOverrides podOverrides;
+
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        public static class PodOverrides implements ToBuilder {
+
+          private final Metadata metadata;
+
+          @Data
+          @Builder(toBuilder = true)
+          @Jacksonized
+          public static class Metadata implements ToBuilder {
+
+            /** Labels to be added to the K8 Pod or custom resource. */
+            @Builder.Default private final Map<String, String> labels = Collections.emptyMap();
+          }
+        }
+      }
+    }
 
     @Data
     @Builder(toBuilder = true)
