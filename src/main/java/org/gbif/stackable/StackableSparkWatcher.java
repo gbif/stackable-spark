@@ -127,40 +127,39 @@ public class StackableSparkWatcher implements Runnable, Closeable {
     Configuration.setDefaultApiClient(ClientBuilder.kubeconfig(kubeConfig).build());
     ApiClient client = Configuration.getDefaultApiClient();
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
-
-    while (!stop) {
-      // Creates a watch for the Stackable Spark application
-      try (Watch<Object> watch =
-          Watch.createWatch(
-              client,
-              customObjectsApi.listNamespacedCustomObjectCall(
-                  STACKABLE_SPARK_GROUP,
-                  STACKABLE_SPARK_VERSION,
-                  kubeConfig.getNamespace(),
-                  STACKABLE_SPARK_PLURAL,
-                  null,
-                  null,
-                  null,
-                  toSelectorQuery(fieldSelector),
-                  toSelectorQuery(labelSelector),
-                  null,
-                  null,
-                  null,
-                  null,
-                  Boolean.TRUE,
-                  null),
-              new TypeToken<Watch.Response<Object>>() {}.getType())) {
-        // Gets the watch response and calls the listener
-        for (Watch.Response<Object> item : watch) {
-          AbstractMap<String, Object> object = (AbstractMap<String, Object>) item.object;
-          EventType eventType = EventType.valueOf(item.type);
-          K8StackableSparkController.Phase phase = getPhase(object);
-          String appName = getAppName(object);
-          if (matchesNameSelector(appName)) {
-            eventsListener.onEvent(eventType, appName, phase, object);
-          }
+    // Creates a watch for the Stackable Spark application
+    try (Watch<Object> watch =
+        Watch.createWatch(
+            client,
+            customObjectsApi.listNamespacedCustomObjectCall(
+                STACKABLE_SPARK_GROUP,
+                STACKABLE_SPARK_VERSION,
+                kubeConfig.getNamespace(),
+                STACKABLE_SPARK_PLURAL,
+                null,
+                null,
+                null,
+                toSelectorQuery(fieldSelector),
+                toSelectorQuery(labelSelector),
+                null,
+                null,
+                null,
+                null,
+                Boolean.TRUE,
+                null),
+            new TypeToken<Watch.Response<Object>>() {}.getType())) {
+      // Gets the watch response and calls the listener
+      for (Watch.Response<Object> item : watch) {
+        AbstractMap<String, Object> object = (AbstractMap<String, Object>) item.object;
+        EventType eventType = EventType.valueOf(item.type);
+        K8StackableSparkController.Phase phase = getPhase(object);
+        String appName = getAppName(object);
+        if (matchesNameSelector(appName)) {
+          eventsListener.onEvent(eventType, appName, phase, object);
         }
-        System.out.println("SSSS");
+        if (stop) {
+          break;
+        }
       }
     }
   }
