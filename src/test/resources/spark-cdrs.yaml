@@ -186,10 +186,12 @@ kind: SparkApplication
 metadata:
   name: occurrence-table-build
 spec:
-  podOverrides:
-    metadata:
-      labels:
-        my-custom-label: super-important-label
+  roleGroups:
+    default:
+      podOverrides:
+        metadata:
+          labels:
+            my-custom-label: super-important-label
   version: "1.0"
   sparkImage: docker.stackable.tech/stackable/spark-k8s:3.3.0-stackable0.1.0
   mode: cluster
