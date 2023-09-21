@@ -54,7 +54,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependencies -->
-        <io.kubernetes.client.version>18.0.0</io.kubernetes.client.version>
+        <io.kubernetes.client.version>18.0.1</io.kubernetes.client.version>
         <snakeyaml.version>1.27</snakeyaml.version>
         <jackson.version>2.12.2</jackson.version>
         <lombok.version>1.18.20</lombok.version>
