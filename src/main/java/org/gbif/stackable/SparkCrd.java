@@ -24,14 +24,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.SneakyThrows;
+import lombok.*;
 import lombok.extern.jackson.Jacksonized;
 
 @Data
 @Builder(toBuilder = true)
 @Jacksonized
+@NoArgsConstructor
+@AllArgsConstructor
 public class SparkCrd implements ToBuilder {
 
   private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
@@ -62,6 +62,8 @@ public class SparkCrd implements ToBuilder {
   @Data
   @Builder(toBuilder = true)
   @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class Metadata implements ToBuilder {
 
     /** Application name */
@@ -74,6 +76,8 @@ public class SparkCrd implements ToBuilder {
   @Data
   @Builder(toBuilder = true)
   @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class Spec implements ToBuilder {
 
     /** Pod overrides */
@@ -149,6 +153,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class RoleGroups implements ToBuilder {
 
       @JsonProperty("default")
@@ -157,6 +163,8 @@ public class SparkCrd implements ToBuilder {
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
       public static class Default implements ToBuilder {
 
         private PodOverrides podOverrides;
@@ -164,6 +172,8 @@ public class SparkCrd implements ToBuilder {
         @Data
         @Builder(toBuilder = true)
         @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
         public static class PodOverrides implements ToBuilder {
 
           private Metadata metadata;
@@ -171,6 +181,8 @@ public class SparkCrd implements ToBuilder {
           @Data
           @Builder(toBuilder = true)
           @Jacksonized
+          @NoArgsConstructor
+          @AllArgsConstructor
           public static class Metadata implements ToBuilder {
 
             /** Labels to be added to the K8 Pod or custom resource. */
@@ -183,6 +195,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Deps implements ToBuilder {
 
       /** A list of python packages that will be installed via pip. */
@@ -201,6 +215,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ConfigMap implements ToBuilder {
 
       private String name;
@@ -221,6 +237,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Volume implements ToBuilder {
 
       /** The volume name. */
@@ -234,6 +252,8 @@ public class SparkCrd implements ToBuilder {
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
       public static class PersistentVolumeClaim implements ToBuilder {
 
         /** The persistent volume claim name backing the volume. */
@@ -244,6 +264,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Job implements ToBuilder {
 
       /** Resources specification for the initiating Job. */
@@ -254,6 +276,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class VolumeMount implements ToBuilder {
 
       /** Name of mount. */
@@ -269,6 +293,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Resources implements ToBuilder {
 
       private Cpu cpu;
@@ -278,6 +304,8 @@ public class SparkCrd implements ToBuilder {
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
       public static class Cpu implements ToBuilder {
 
         private String min;
@@ -288,6 +316,8 @@ public class SparkCrd implements ToBuilder {
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
       public static class Memory implements ToBuilder {
         private String limit;
       }
@@ -296,6 +326,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Driver implements ToBuilder {
 
       /** Resources specification for the component Pod. */
@@ -321,6 +353,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Executor implements ToBuilder {
 
       /** Number of executor instances launched for this job. */
@@ -349,6 +383,8 @@ public class SparkCrd implements ToBuilder {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class LogFileDirectory implements ToBuilder {
 
       /**
