@@ -169,26 +169,29 @@ public class SparkCrd implements ToBuilder {
 
         private PodOverrides podOverrides;
 
-        @Data
-        @Builder(toBuilder = true)
-        @Jacksonized
-        @NoArgsConstructor
-        @AllArgsConstructor
-        public static class PodOverrides implements ToBuilder {
-
-          private Metadata metadata;
-
-          @Data
-          @Builder(toBuilder = true)
-          @Jacksonized
-          @NoArgsConstructor
-          @AllArgsConstructor
-          public static class Metadata implements ToBuilder {
-
-            /** Labels to be added to the K8 Pod or custom resource. */
-            @Builder.Default private Map<String, String> labels = Collections.emptyMap();
-          }
         }
+      }
+    }
+
+    @Data
+    @Builder(toBuilder = true)
+    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PodOverrides implements ToBuilder {
+
+      private PodOverrides.Metadata metadata;
+
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public static class Metadata implements ToBuilder {
+
+        /** Labels to be added to the K8 Pod or custom resource. */
+        @Builder.Default private Map<String, String> labels = Collections.emptyMap();
+        @Builder.Default private Map<String, String> annotations = Collections.emptyMap();
       }
     }
 
@@ -348,6 +351,8 @@ public class SparkCrd implements ToBuilder {
        * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
        */
       private String logging;
+
+      private PodOverrides podOverrides;
     }
 
     @Data
@@ -378,6 +383,8 @@ public class SparkCrd implements ToBuilder {
        * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
        */
       private String logging;
+
+      private PodOverrides podOverrides;
     }
 
     @Data
@@ -396,4 +403,3 @@ public class SparkCrd implements ToBuilder {
       private String prefix;
     }
   }
-}

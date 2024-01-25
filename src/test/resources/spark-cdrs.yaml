@@ -238,6 +238,19 @@ spec:
           - key: occurrence-table-backfill.yml
             path: occurrence-table-backfill.yml
   driver:
+    podOverrides:
+      metadata:
+        annotations:
+          yunikorn.apache.org/task-group-name: "spark-driver"
+          yunikorn.apache.org/task-groups: |-
+            [{
+              "name": "spark-driver",
+              "minMember": 1,
+              "minResource": {
+                "cpu": "1",
+                "memory": "1Gi"
+              }
+            }]
     resources:
       cpu:
         min: "100m"
@@ -258,6 +271,19 @@ spec:
         mountPath: /etc/hadoop/conf/hive-site.xml
         subPath: hive-site.xml
   executor:
+    podOverrides:
+      metadata:
+        annotations:
+          yunikorn.apache.org/task-group-name: "spark-executor"
+          yunikorn.apache.org/task-groups: |-
+            [{
+              "name": "spark-executor",
+              "minMember": 1,
+              "minResource": {
+                "cpu": "1",
+                "memory": "1Gi"
+              }
+            }]
     instances: 10
     resources:
       cpu:
