@@ -31,13 +31,13 @@ import lombok.SneakyThrows;
  * This test class basically compiles the examples provided by Stackable. Most of them found at this
  * <a href="https://docs.stackable.tech/home/stable/spark-k8s/usage-guide/examples.html">page</a>.
  */
-public class SparkCrdTest {
+class SparkCrdTest {
 
   private static final String TEST_FILE = "spark-cdrs.yaml";
 
   @Test
   @SneakyThrows
-  public void externalResourcesSerDeSerTest() {
+  void externalResourcesSerDeSerTest() {
     readAllSparkCrds(TEST_FILE)
         .forEach(
             sparkCrd -> {

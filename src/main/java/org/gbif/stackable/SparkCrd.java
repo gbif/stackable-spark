@@ -100,9 +100,7 @@ public class SparkCrd implements ToBuilder {
      * environment needed by the job e.g.
      * docker.stackable.tech/stackable/spark-k8s:3.3.0-stackable0.3.0.
      */
-    @Builder.Default
-    private String sparkImage =
-        "docker.stackable.tech/stackable/spark-k8s:3.3.0-stackable0.1.0";
+    @Builder.Default private SparkImage sparkImage = SparkImage.builder().stackableVersion("3.4.0").productVersion("23.11.0").build();
 
     /**
      * Optional Enum (one of Always, IfNotPresent or Never) that determines the pull policy of the
@@ -149,6 +147,16 @@ public class SparkCrd implements ToBuilder {
 
     /** Log file directory settings. */
     private LogFileDirectory logFileDirectory;
+
+    @Data
+    @Builder(toBuilder = true)
+    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SparkImage implements ToBuilder {
+      private String productVersion;
+      private String stackableVersion;
+    }
 
     @Data
     @Builder(toBuilder = true)
@@ -272,8 +280,22 @@ public class SparkCrd implements ToBuilder {
     public static class Job implements ToBuilder {
 
       /** Resources specification for the initiating Job. */
-      private Resources resources;
+      private Config config;
     }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Config implements ToBuilder {
+
+    /** Resources specification for the component Pod. */
+    private Resources resources;
+
+    /** A list of mounted volumes for the component Pod. */
+    private List<VolumeMount> volumeMounts;
+  }
 
     /** Mounted Volume. */
     @Data
@@ -333,11 +355,8 @@ public class SparkCrd implements ToBuilder {
     @AllArgsConstructor
     public static class Driver implements ToBuilder {
 
-      /** Resources specification for the component Pod. */
-      private Resources resources;
-
-      /** A list of mounted volumes for the component Pod. */
-      private List<VolumeMount> volumeMounts;
+      /** Resources specification for the component Pod and list of mounted volumes for the component Pod. */
+      private Config config;
 
       /**
        * Driver Pod placement affinity. See <a
@@ -365,11 +384,8 @@ public class SparkCrd implements ToBuilder {
       /** Number of executor instances launched for this job. */
       private int instances;
 
-      /** Resources specification for the component Pod. */
-      private Resources resources;
-
-      /** A list of mounted volumes for the component Pod. */
-      private List<VolumeMount> volumeMounts;
+      /** Resources specification for the component Pod and list of mounted volumes for the component Pod. */
+      private Config config;
 
       /**
        * Driver Pod placement affinity. See <a
