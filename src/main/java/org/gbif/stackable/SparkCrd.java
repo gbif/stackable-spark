@@ -20,7 +20,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -126,9 +128,6 @@ public class SparkCrd implements ToBuilder {
     /** Arguments passed directly to the job artifact. */
     private List<String> args;
 
-    /** S3 connection specification. See the S3 resources for more details. */
-    private String s3connection;
-
     /** A map of key/value strings that will be passed directly to spark-submit. */
     private Map<String, String> sparkConf;
 
@@ -146,6 +145,12 @@ public class SparkCrd implements ToBuilder {
 
     /** Spark executors definition. */
     private Executor executor;
+
+    /** Vector configmap containing discovery information for the aggregator **/
+    private String vectorAggregatorConfigMapName;
+
+    /** S3 connection specification. See the S3 resources for more details. */
+    private S3Connection s3connection;
 
     /** Log file directory settings. */
     private LogFileDirectory logFileDirectory;
@@ -181,6 +186,7 @@ public class SparkCrd implements ToBuilder {
     public static class PodOverrides implements ToBuilder {
 
       private PodOverrides.Metadata metadata;
+      private PodOverrides.Spec spec;
 
       @Data
       @Builder(toBuilder = true)
@@ -192,6 +198,24 @@ public class SparkCrd implements ToBuilder {
         /** Labels to be added to the K8 Pod or custom resource. */
         @Builder.Default private Map<String, String> labels = Collections.emptyMap();
         @Builder.Default private Map<String, String> annotations = Collections.emptyMap();
+      }
+
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public static class Spec implements ToBuilder {
+        private List<InitContainers> initContainers;
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class InitContainers implements ToBuilder {
+          private String name;
+          private String imagePullPolicy;
+        }
       }
     }
 
@@ -271,8 +295,8 @@ public class SparkCrd implements ToBuilder {
     @AllArgsConstructor
     public static class Job implements ToBuilder {
 
-      /** Resources specification for the initiating Job. */
-      private Resources resources;
+      /** config specification for the initiating Job. */
+      private Config config;
     }
 
     /** Mounted Volume. */
@@ -333,8 +357,8 @@ public class SparkCrd implements ToBuilder {
     @AllArgsConstructor
     public static class Driver implements ToBuilder {
 
-      /** Resources specification for the component Pod. */
-      private Resources resources;
+      /** Config specification for the component Pod. */
+      private Config config;
 
       /** A list of mounted volumes for the component Pod. */
       private List<VolumeMount> volumeMounts;
@@ -345,12 +369,6 @@ public class SparkCrd implements ToBuilder {
        * placement</a>.
        */
       private String affinity;
-
-      /**
-       * Logging aggregation for the driver Pod. See <a
-       * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
-       */
-      private String logging;
 
       private PodOverrides podOverrides;
     }
@@ -362,11 +380,11 @@ public class SparkCrd implements ToBuilder {
     @AllArgsConstructor
     public static class Executor implements ToBuilder {
 
-      /** Number of executor instances launched for this job. */
-      private int instances;
+      /** Number of executor replicas launched for this job. */
+      private int replicas;
 
-      /** Resources specification for the component Pod. */
-      private Resources resources;
+      /** Config for the Pod */
+      private Config config;
 
       /** A list of mounted volumes for the component Pod. */
       private List<VolumeMount> volumeMounts;
@@ -378,12 +396,6 @@ public class SparkCrd implements ToBuilder {
        */
       private String affinity;
 
-      /**
-       * Logging aggregation for the driver Pod. See <a
-       * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
-       */
-      private String logging;
-
       private PodOverrides podOverrides;
     }
 
@@ -393,13 +405,151 @@ public class SparkCrd implements ToBuilder {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class LogFileDirectory implements ToBuilder {
-
+      private S3 s3;
       /**
        * S3 bucket definition where applications should publish events for the Spark History server.
        */
-      private String bucket;
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public static class S3 implements ToBuilder {
+        /** Prefix to use when storing events for the Spark History server. */
+        private String prefix;
+        /** Definition for how to access the bucket **/
+        private Bucket bucket;
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Bucket implements ToBuilder {
+          /** Inline configuration for connection to the bucket **/
+          private Inline inline;
+          @Data
+          @Builder(toBuilder = true)
+          @Jacksonized
+          @NoArgsConstructor
+          @AllArgsConstructor
+          public static class Inline implements ToBuilder {
+            /** The name of the bucket to put the logs **/
+            private String bucketName;
+          }
 
-      /** Prefix to use when storing events for the Spark History server. */
-      private String prefix;
+        }
+      }
     }
+    @Data
+    @Builder(toBuilder = true)
+    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class S3Connection implements ToBuilder {
+      private Inline inline;
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public static class Inline implements ToBuilder {
+        private String host;
+        private int port;
+        private String accessStyle;
+        private Credentials credentials;
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Credentials implements ToBuilder {
+          private String secretClass;
+        }
+      }
+    }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Logging implements ToBuilder {
+      private boolean enableVectorAgent;
+      private Containers containers;
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public static class Containers implements ToBuilder {
+        private Vector vector;
+        private Spark spark;
+
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Vector implements ToBuilder {
+          private File file;
+        }
+
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Spark implements ToBuilder {
+          private Console console;
+          private File file;
+          private Loggers loggers;
+
+          @Data
+          @Builder(toBuilder = true)
+          @Jacksonized
+          @NoArgsConstructor
+          @AllArgsConstructor
+          public static class Console implements ToBuilder {
+            private String level;
+          }
+
+          @Data
+          @NoArgsConstructor
+          @AllArgsConstructor
+          public static class Loggers {
+            @Setter(onMethod_ = {@JsonSetter("ROOT")})
+            @Getter(onMethod_ = {@JsonGetter("ROOT")})
+            private Root ROOT;
+
+            @Data
+            @Builder(toBuilder = true)
+            @Jacksonized
+            @NoArgsConstructor
+            @AllArgsConstructor
+            public static class Root implements ToBuilder {
+              private String level;
+            }
+          }
+        }
+      }
   }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class File implements ToBuilder {
+      private String level;
+  }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Config implements ToBuilder {
+      private Resources resources;
+      private Logging logging;
+  }
+}
