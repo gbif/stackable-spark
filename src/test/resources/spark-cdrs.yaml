@@ -10,7 +10,7 @@ spec:
   mainClass: org.apache.spark.examples.SparkPi
   mainApplicationFile: /stackable/spark/examples/jars/spark-examples_2.12-3.3.0.jar
   executor:
-    instances: 3
+    replicas: 3
 ---
 apiVersion: spark.stackable.tech/v1alpha1
 kind: SparkApplication
@@ -38,7 +38,7 @@ spec:
       - name: job-deps
         mountPath: /dependencies
   executor:
-    instances: 3
+    replicas: 3
     volumeMounts:
       - name: job-deps
         mountPath: /dependencies
@@ -71,7 +71,7 @@ spec:
       - name: job-deps
         mountPath: /dependencies
   executor:
-    instances: 3
+    replicas: 3
     volumeMounts:
       - name: job-deps
         mountPath: /dependencies
@@ -104,7 +104,7 @@ spec:
       - name: job-deps
         mountPath: /dependencies
   executor:
-    instances: 3
+    replicas: 3
     volumeMounts:
       - name: job-deps
         mountPath: /dependencies
@@ -128,27 +128,30 @@ spec:
   sparkConf:
     "spark.hadoop.fs.s3a.aws.credentials.provider": "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
   job:
-    resources:
-      cpu:
-        min: "1"
-        max: "1"
-      memory:
-        limit: "1Gi"
+    config:
+      resources:
+        cpu:
+          min: "1"
+          max: "1"
+        memory:
+          limit: "1Gi"
   driver:
-    resources:
-      cpu:
-        min: "1"
-        max: "1500m"
-      memory:
-        limit: "1Gi"
+    config:
+      resources:
+        cpu:
+          min: "1"
+          max: "1500m"
+        memory:
+          limit: "1Gi"
   executor:
-    instances: 3
-    resources:
-      cpu:
-        min: "1"
-        max: "4"
-      memory:
-        limit: "2Gi"
+    replicas: 3
+    config:
+      resources:
+        cpu:
+          min: "1"
+          max: "4"
+        memory:
+          limit: "2Gi"
 ---
 apiVersion: spark.stackable.tech/v1alpha1
 kind: SparkApplication
@@ -176,7 +179,7 @@ spec:
       - name: job-deps
         mountPath: /dependencies
   executor:
-    instances: 3
+    replicas: 3
     volumeMounts:
       - name: job-deps
         mountPath: /dependencies
@@ -251,12 +254,13 @@ spec:
                 "memory": "1Gi"
               }
             }]
-    resources:
-      cpu:
-        min: "100m"
-        max: "4000m"
-      memory:
-        limit: "2Gi"
+    config:
+      resources:
+        cpu:
+          min: "100m"
+          max: "4000m"
+        memory:
+          limit: "2Gi"
     # Mount the GBIF-managed volumes providing environment configuration for Spark
     volumeMounts:
       - name: occurrence-config
@@ -284,13 +288,295 @@ spec:
                 "memory": "1Gi"
               }
             }]
-    instances: 10
-    resources:
-      cpu:
-        min: "100m"
-        max: "10000m"
-      memory:
-        limit: "8Gi"
+    replicas: 10
+    config:
+      resources:
+        cpu:
+          min: "100m"
+          max: "10000m"
+        memory:
+          limit: "8Gi"
+    # Mount the GBIF-managed volumes providing environment configuration for Spark
+    volumeMounts:
+      - name: hadoop-env
+        mountPath: /etc/hadoop/conf/core-site.xml
+        subPath: core-site.xml
+      - name: hadoop-env
+        mountPath: /etc/hadoop/conf/hdfs-site.xml
+        subPath: hdfs-site.xml
+      - name: hive-env
+        mountPath: /etc/hadoop/conf/hive-site.xml
+        subPath: hive-site.xml
+---
+apiVersion: spark.stackable.tech/v1alpha1
+kind: SparkApplication
+metadata:
+  name: occurrence-table-build
+spec:
+  roleGroups:
+    default:
+      podOverrides:
+        metadata:
+          labels:
+            my-custom-label: super-important-label
+  version: "1.0"
+  sparkImage: docker.stackable.tech/stackable/spark-k8s:3.3.0-stackable0.1.0
+  mode: cluster
+  mainApplicationFile: hdfs://gbif-hdfs-namenode-default-0/apps/occurrence-table-build-spark.jar
+  mainClass: org.gbif.occurrence.table.backfill.TableBackfill
+  args:
+    - "/etc/gbif/occurrence-table-backfill.yml"
+    - "CREATE"
+    - "TABLE"
+  sparkConf:
+    "spark.driver.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
+    "spark.executor.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
+    "spark.broadcast.compress": "true"
+    "spark.checkpoint.compress": "true"
+    "spark.executor.memoryOverhead": "4096"
+    "spark.executor.heartbeatInterval": "20s"
+    "spark.network.timeout": "240s"
+    "spark.io.compression.codec": "lz4"
+    "spark.rdd.compress": "true"
+    "spark.driver.extraClassPath": "/dependencies/jars/*"
+    "spark.executor.extraClassPath": "/dependencies/jars/*"
+    "spark.driver.extraClassPath": "/etc/hadoop/conf/"
+    "spark.executor.extraClassPath": "/etc/hadoop/conf/"
+  # The following config maps are managed in our K8s environment using GBIF naming convention
+  volumes:
+    - name: hadoop-env
+      configMap:
+        name: gbif-hdfs
+        items:
+          - key: core-site.xml
+            path: core-site.xml
+          - key: hdfs-site.xml
+            path: hdfs-site.xml
+    - name: hive-env
+      configMap:
+        name: gbif-hive-metastore-metastore-default
+        items:
+          - key: hive-site.xml
+            path: hive-site.xml
+    - name: occurrence-config
+      configMap:
+        name: gbif-occurrence-table-build-env
+        items:
+          - key: occurrence-table-backfill.yml
+            path: occurrence-table-backfill.yml
+  driver:
+    podOverrides:
+      metadata:
+        annotations:
+          yunikorn.apache.org/task-group-name: "spark-driver"
+          yunikorn.apache.org/task-groups: |-
+            [{
+              "name": "spark-driver",
+              "minMember": 1,
+              "minResource": {
+                "cpu": "1",
+                "memory": "1Gi"
+              }
+            }]
+    config:
+      resources:
+        cpu:
+          min: "100m"
+          max: "4000m"
+        memory:
+          limit: "2Gi"
+    # Mount the GBIF-managed volumes providing environment configuration for Spark
+    volumeMounts:
+      - name: occurrence-config
+        mountPath: /etc/gbif
+      - name: hadoop-env
+        mountPath: /etc/hadoop/conf/core-site.xml
+        subPath: core-site.xml
+      - name: hadoop-env
+        mountPath: /etc/hadoop/conf/hdfs-site.xml
+        subPath: hdfs-site.xml
+      - name: hive-env
+        mountPath: /etc/hadoop/conf/hive-site.xml
+        subPath: hive-site.xml
+  executor:
+    podOverrides:
+      metadata:
+        annotations:
+          yunikorn.apache.org/task-group-name: "spark-executor"
+          yunikorn.apache.org/task-groups: |-
+            [{
+              "name": "spark-executor",
+              "minMember": 1,
+              "minResource": {
+                "cpu": "1",
+                "memory": "1Gi"
+              }
+            }]
+      spec:
+        initContainers:
+          - name: job
+            imagePullPolicy: Always
+    replicas: 10
+    config:
+      resources:
+        cpu:
+          min: "100m"
+          max: "10000m"
+        memory:
+          limit: "8Gi"
+    # Mount the GBIF-managed volumes providing environment configuration for Spark
+    volumeMounts:
+      - name: hadoop-env
+        mountPath: /etc/hadoop/conf/core-site.xml
+        subPath: core-site.xml
+      - name: hadoop-env
+        mountPath: /etc/hadoop/conf/hdfs-site.xml
+        subPath: hdfs-site.xml
+      - name: hive-env
+        mountPath: /etc/hadoop/conf/hive-site.xml
+        subPath: hive-site.xml
+---
+apiVersion: spark.stackable.tech/v1alpha1
+kind: SparkApplication
+metadata:
+  name: occurrence-table-build
+spec:
+  roleGroups:
+    default:
+      podOverrides:
+        metadata:
+          labels:
+            my-custom-label: super-important-label
+  version: "1.0"
+  sparkImage: docker.stackable.tech/stackable/spark-k8s:3.3.0-stackable0.1.0
+  mode: cluster
+  mainApplicationFile: hdfs://gbif-hdfs-namenode-default-0/apps/occurrence-table-build-spark.jar
+  mainClass: org.gbif.occurrence.table.backfill.TableBackfill
+  vectorAggregatorConfigMapName: "some-configmap"
+  s3connection:
+    inline:
+      host: "a-host"
+      port: 9999
+      accessStyle: "Path"
+      credentials:
+        secretClass: "a-secret-class"
+  logFileDirectory:
+      s3:
+        prefix: "prefix"
+        bucket:
+          inline:
+            bucketName: "bucket"
+  args:
+    - "/etc/gbif/occurrence-table-backfill.yml"
+    - "CREATE"
+    - "TABLE"
+  sparkConf:
+    "spark.driver.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
+    "spark.executor.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
+    "spark.broadcast.compress": "true"
+    "spark.checkpoint.compress": "true"
+    "spark.executor.memoryOverhead": "4096"
+    "spark.executor.heartbeatInterval": "20s"
+    "spark.network.timeout": "240s"
+    "spark.io.compression.codec": "lz4"
+    "spark.rdd.compress": "true"
+    "spark.driver.extraClassPath": "/dependencies/jars/*"
+    "spark.executor.extraClassPath": "/dependencies/jars/*"
+    "spark.driver.extraClassPath": "/etc/hadoop/conf/"
+    "spark.executor.extraClassPath": "/etc/hadoop/conf/"
+  # The following config maps are managed in our K8s environment using GBIF naming convention
+  volumes:
+    - name: hadoop-env
+      configMap:
+        name: gbif-hdfs
+        items:
+          - key: core-site.xml
+            path: core-site.xml
+          - key: hdfs-site.xml
+            path: hdfs-site.xml
+    - name: hive-env
+      configMap:
+        name: gbif-hive-metastore-metastore-default
+        items:
+          - key: hive-site.xml
+            path: hive-site.xml
+    - name: occurrence-config
+      configMap:
+        name: gbif-occurrence-table-build-env
+        items:
+          - key: occurrence-table-backfill.yml
+            path: occurrence-table-backfill.yml
+  driver:
+    config:
+      resources:
+        cpu:
+          min: "100m"
+          max: "4000m"
+        memory:
+          limit: "2Gi"
+      logging:
+        enableVectorAgent: true
+        containers:
+          vector:
+            file:
+              level: "INFO"
+          spark:
+            file:
+              level: "INFO"
+            console:
+              level: "INFO"
+            loggers:
+              ROOT:
+                level: "INFO"
+    # Mount the GBIF-managed volumes providing environment configuration for Spark
+    volumeMounts:
+      - name: occurrence-config
+        mountPath: /etc/gbif
+      - name: hadoop-env
+        mountPath: /etc/hadoop/conf/core-site.xml
+        subPath: core-site.xml
+      - name: hadoop-env
+        mountPath: /etc/hadoop/conf/hdfs-site.xml
+        subPath: hdfs-site.xml
+      - name: hive-env
+        mountPath: /etc/hadoop/conf/hive-site.xml
+        subPath: hive-site.xml
+  executor:
+    podOverrides:
+      metadata:
+        annotations:
+          yunikorn.apache.org/task-group-name: "spark-executor"
+          yunikorn.apache.org/task-groups: |-
+            [{
+              "name": "spark-executor",
+              "minMember": 1,
+              "minResource": {
+                "cpu": "1",
+                "memory": "1Gi"
+              }
+            }]
+    replicas: 10
+    config:
+      resources:
+        cpu:
+          min: "100m"
+          max: "10000m"
+        memory:
+          limit: "8Gi"
+      logging:
+        enableVectorAgent: true
+        containers:
+          vector:
+            file:
+              level: "INFO"
+          spark:
+            file:
+              level: "INFO"
+            console:
+              level: "INFO"
+            loggers:
+              ROOT:
+                level: "INFO"
     # Mount the GBIF-managed volumes providing environment configuration for Spark
     volumeMounts:
       - name: hadoop-env
