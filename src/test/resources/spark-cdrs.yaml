@@ -22,17 +22,23 @@ spec:
   sparkConf:
     "spark.driver.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
     "spark.executor.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
+    "spark.jars.ivy": "/tmp"
     "spark.broadcast.compress": "true"
     "spark.checkpoint.compress": "true"
-    "spark.executor.memoryOverhead": "4096"
+    "spark.executor.memoryOverhead": "2048"
     "spark.executor.heartbeatInterval": "20s"
     "spark.network.timeout": "240s"
-    "spark.io.compression.codec": "lz4"
+    "spark.io.compression.codec": "snappy"
     "spark.rdd.compress": "true"
-    "spark.driver.extraClassPath": "/dependencies/jars/*"
-    "spark.executor.extraClassPath": "/dependencies/jars/*"
-    "spark.driver.extraClassPath": "/etc/hadoop/conf/"
-    "spark.executor.extraClassPath": "/etc/hadoop/conf/"
+    "spark.driver.userClassPathFirst" : "true"
+    "spark.driver.extraClassPath": "/etc/hadoop/conf/:/stackable/spark/extra-jars/*"
+    "spark.executor.extraClassPath": "/etc/hadoop/conf/:/stackable/spark/extra-jars/*"
+    "spark.kubernetes.authenticate.driver.serviceAccountName": "gbif-spark-sa"
+    "spark.kubernetes.scheduler.name": "yunikorn"
+    "spark.kubernetes.driver.label.queue": "root.default"
+    "spark.kubernetes.executor.label.queue": "root.default"
+    "spark.kubernetes.driver.annotation.yunikorn.apache.org/app-id": "{{APP_ID}}"
+    "spark.kubernetes.executor.annotation.yunikorn.apache.org/app-id": "{{APP_ID}}"
   # The following config maps are managed in our K8s environment using GBIF naming convention
   volumes:
     - name: hadoop-env
@@ -60,7 +66,7 @@ spec:
       metadata:
         annotations:
           yunikorn.apache.org/task-group-name: "spark-driver"
-          yunikorn.apache.org/task-groups:
+          yunikorn.apache.org/task-groups: |-
             [{
               "name": "spark-driver",
               "minMember": 1,
@@ -69,54 +75,63 @@ spec:
                 "memory": "1Gi"
               }
             }]
-    resources:
-      cpu:
-        min: "100m"
-        max: "4000m"
-      memory:
-        limit: "2Gi"
-    # Mount the GBIF-managed volumes providing environment configuration for Spark
-    volumeMounts:
-      - name: occurrence-config
-        mountPath: /etc/gbif
-      - name: hadoop-env
-        mountPath: /etc/hadoop/conf/core-site.xml
-        subPath: core-site.xml
-      - name: hadoop-env
-        mountPath: /etc/hadoop/conf/hdfs-site.xml
-        subPath: hdfs-site.xml
-      - name: hive-env
-        mountPath: /etc/hadoop/conf/hive-site.xml
-        subPath: hive-site.xml
+    config:
+      resources:
+        cpu:
+          min: "200m"
+          max: "2000m"
+        memory:
+          limit: "1Gi"
+      # Mount the GBIF-managed volumes providing environment configuration for Spark
+      volumeMounts:
+        - name: hadoop-env
+          mountPath: /etc/hadoop/conf/core-site.xml
+          subPath: core-site.xml
+        - name: hadoop-env
+          mountPath: /etc/hadoop/conf/hdfs-site.xml
+          subPath: hdfs-site.xml
+        - name: hive-env
+          mountPath: /etc/hadoop/conf/hive-site.xml
+          subPath: hive-site.xml
+        - name: hbase-env
+          mountPath: /etc/hadoop/conf/hbase-site.xml
+          subPath: hbase-site.xml
+        - name: pipelines-conf
+          mountPath: /etc/pipelines/conf/metrics.properties
+          subPath: metrics.properties
   executor:
     podOverrides:
       metadata:
         annotations:
           yunikorn.apache.org/task-group-name: "spark-executor"
-          yunikorn.apache.org/task-groups:
+          yunikorn.apache.org/task-groups: |-
             [{
               "name": "spark-executor",
               "minMember": 1,
               "minResource": {
-                "cpu": "1",
-                "memory": "1Gi"
+                "cpu": "4000m",
+                "memory": "2Gi"
               }
             }]
-    instances: 10
-    resources:
-      cpu:
-        min: "100m"
-        max: "10000m"
-      memory:
-        limit: "8Gi"
-    # Mount the GBIF-managed volumes providing environment configuration for Spark
-    volumeMounts:
-      - name: hadoop-env
-        mountPath: /etc/hadoop/conf/core-site.xml
-        subPath: core-site.xml
-      - name: hadoop-env
-        mountPath: /etc/hadoop/conf/hdfs-site.xml
-        subPath: hdfs-site.xml
-      - name: hive-env
-        mountPath: /etc/hadoop/conf/hive-site.xml
-        subPath: hive-site.xml
+    replicas: 10
+    config:
+      resources:
+        cpu:
+          min: "3000m"
+          max: "5000m"
+        memory:
+          limit: "4Gi"
+      # Mount the GBIF-managed volumes providing environment configuration for Spark
+      volumeMounts:
+        - name: hadoop-env
+          mountPath: /etc/hadoop/conf/core-site.xml
+          subPath: core-site.xml
+        - name: hadoop-env
+          mountPath: /etc/hadoop/conf/hdfs-site.xml
+          subPath: hdfs-site.xml
+        - name: hbase-env
+          mountPath: /etc/hadoop/conf/hbase-site.xml
+          subPath: hbase-site.xml
+        - name: hive-env
+          mountPath: /etc/hadoop/conf/hive-site.xml
+          subPath: hive-site.xml

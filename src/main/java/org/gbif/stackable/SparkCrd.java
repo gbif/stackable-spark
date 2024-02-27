@@ -205,8 +205,9 @@ public class SparkCrd implements ToBuilder {
         private String taskGroupName;
 
         @JsonProperty("yunikorn.apache.org/task-groups")
-        private List<TaskGroup> taskGroups;
+        private String taskGroups;
 
+        // Helps convert yunikorn json task-groups, but not used directly
         @Data
         @Builder(toBuilder = true)
         @Jacksonized
@@ -371,26 +372,9 @@ public class SparkCrd implements ToBuilder {
     @AllArgsConstructor
     public static class Driver implements ToBuilder {
 
-      /** Resources specification for the component Pod. */
-      private Resources resources;
-
-      /** A list of mounted volumes for the component Pod. */
-      private List<VolumeMount> volumeMounts;
-
-      /**
-       * Driver Pod placement affinity. See <a
-       * href="https://docs.stackable.tech/home/nightly/spark-k8s/usage-guide/pod-placement.html">Pod
-       * placement</a>.
-       */
-      private String affinity;
-
-      /**
-       * Logging aggregation for the driver Pod. See <a
-       * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
-       */
-      private String logging;
-
       private PodOverrides podOverrides;
+
+      private Config config;
     }
 
     @Data
@@ -401,29 +385,38 @@ public class SparkCrd implements ToBuilder {
     public static class Executor implements ToBuilder {
 
       /** Number of executor instances launched for this job. */
-      private int instances;
-
-      /** Resources specification for the component Pod. */
-      private Resources resources;
-
-      /** A list of mounted volumes for the component Pod. */
-      private List<VolumeMount> volumeMounts;
-
-      /**
-       * Driver Pod placement affinity. See <a
-       * href="https://docs.stackable.tech/home/nightly/spark-k8s/usage-guide/pod-placement.html">Pod
-       * placement</a>.
-       */
-      private String affinity;
-
-      /**
-       * Logging aggregation for the driver Pod. See <a
-       * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
-       */
-      private String logging;
+      private int replicas;
 
       private PodOverrides podOverrides;
+
+      private Config config;
     }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Config implements ToBuilder {
+    /** Resources specification for the component Pod. */
+    private Resources resources;
+
+    /** A list of mounted volumes for the component Pod. */
+    private List<VolumeMount> volumeMounts;
+
+    /**
+     * Driver Pod placement affinity. See <a
+     * href="https://docs.stackable.tech/home/nightly/spark-k8s/usage-guide/pod-placement.html">Pod
+     * placement</a>.
+     */
+    private String affinity;
+
+    /**
+     * Logging aggregation for the driver Pod. See <a
+     * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
+     */
+    private String logging;
+  }
 
     @Data
     @Builder(toBuilder = true)
