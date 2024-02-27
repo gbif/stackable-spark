@@ -181,27 +181,66 @@ public class SparkCrd implements ToBuilder {
       }
     }
 
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class PodOverrides implements ToBuilder {
+
+    private PodOverrides.Metadata metadata;
+
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class PodOverrides implements ToBuilder {
+    public static class Metadata implements ToBuilder {
 
-      private PodOverrides.Metadata metadata;
+      /** Labels to be added to the K8 Pod or custom resource. */
+      @Builder.Default private Map<String, String> labels = Collections.emptyMap();
+
+      private Annotations annotations;
 
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
       @NoArgsConstructor
       @AllArgsConstructor
-      public static class Metadata implements ToBuilder {
+      public static class Annotations implements ToBuilder {
 
-        /** Labels to be added to the K8 Pod or custom resource. */
-        @Builder.Default private Map<String, String> labels = Collections.emptyMap();
-        @Builder.Default private Map<String, String> annotations = Collections.emptyMap();
+        @JsonProperty("yunikorn.apache.org/task-group-name")
+        private String taskGroupName;
+
+        @JsonProperty("yunikorn.apache.org/task-groups")
+        private String taskGroups;
+
+        // Helps convert yunikorn json task-groups, but not used directly
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class TaskGroup implements ToBuilder {
+
+          private String name;
+          private String minMember;
+          private MinResource minResource;
+
+          @Data
+          @Builder(toBuilder = true)
+          @Jacksonized
+          @NoArgsConstructor
+          @AllArgsConstructor
+          public static class MinResource implements ToBuilder {
+
+            private String cpu;
+            private String memory;
+          }
+        }
       }
     }
+  }
 
     @Data
     @Builder(toBuilder = true)
