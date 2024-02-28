@@ -421,7 +421,7 @@ public class SparkCrd implements ToBuilder {
     public static class Executor implements ToBuilder {
 
       /** Number of executor launched for this job. */
-      private int replicas;
+      private Integer replicas;
 
       /** Resources specification for the component Pod and list of mounted volumes for the component Pod. */
       private Config config;
