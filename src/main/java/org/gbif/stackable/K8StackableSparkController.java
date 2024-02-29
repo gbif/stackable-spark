@@ -1,6 +1,4 @@
 /*
- * Copyright 2023 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +13,6 @@
  */
 package org.gbif.stackable;
 
-import java.util.AbstractMap;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -42,11 +39,6 @@ public class K8StackableSparkController {
   public static final int NOT_FOUND = 404;
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-
-  private interface AppOperation {
-
-    AbstractMap<String, Object> apply(String applicationId) throws ApiException;
-  }
 
   /**
    * Phase represents the lifecycle of Pods in Kubernetes.
@@ -99,47 +91,46 @@ public class K8StackableSparkController {
 
   public Phase getApplicationPhase(String applicationId) throws ApiException {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
-    AbstractMap<String, Object> status =
-        (AbstractMap<String, Object>)
-            customObjectsApi.getNamespacedCustomObjectStatus(
+    Object response =
+        customObjectsApi
+            .getNamespacedCustomObjectStatus(
                 STACKABLE_SPARK_GROUP,
                 STACKABLE_SPARK_VERSION,
                 kubeConfig.getNamespace(),
                 STACKABLE_SPARK_PLURAL,
-                applicationId);
-    return getPhase(status, Phase.INITIATING);
+                applicationId)
+            .execute();
+    return getPhase(response, Phase.INITIATING);
   }
 
-  public AbstractMap<String, Object> submitSparkApplication(String applicationId) throws ApiException {
+  public Object submitSparkApplication(String applicationId) throws ApiException {
     return submitSparkApplication(sparkCrd, applicationId);
   }
 
-  public AbstractMap<String, Object> submitSparkApplication(@NonNull SparkCrd crd) throws ApiException {
+  public Object submitSparkApplication(@NonNull SparkCrd crd) throws ApiException {
     return submitSparkApplication(crd, null);
   }
 
-  public AbstractMap<String, Object> submitSparkApplication(
-      @NonNull SparkCrd crd, String applicationId) throws ApiException {
+  public Object submitSparkApplication(@NonNull SparkCrd crd, String applicationId)
+      throws ApiException {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
 
-    SparkCrd sparkPodConfig = Optional.ofNullable(applicationId).map(aid -> cloneAndRename(crd, aid)).orElse(crd);
+    SparkCrd sparkPodConfig =
+        Optional.ofNullable(applicationId).map(aid -> cloneAndRename(crd, aid)).orElse(crd);
     String name = Optional.ofNullable(applicationId).orElse(sparkPodConfig.getMetadata().getName());
 
     Objects.requireNonNull(sparkPodConfig, "Pod configuraion can't be null");
     Objects.requireNonNull(name, "Application name configuraion can't be null");
 
     deleteIfExists(name);
-    return (AbstractMap<String, Object>)
-        customObjectsApi.createNamespacedCustomObject(
+    return customObjectsApi
+        .createNamespacedCustomObject(
             STACKABLE_SPARK_GROUP,
             STACKABLE_SPARK_VERSION,
             kubeConfig.getNamespace(),
             STACKABLE_SPARK_PLURAL,
-            sparkPodConfig,
-            "true",
-            null,
-            null);
-
+            sparkPodConfig)
+        .execute();
   }
 
   @SneakyThrows
@@ -147,10 +138,9 @@ public class K8StackableSparkController {
     return MAPPER.writeValueAsString(apiException);
   }
 
-  private static AbstractMap<String, Object> tryApplicationMethod(
-      AppOperation operation, String applicationId) {
+  public Object getApplication(String applicationId) {
     try {
-      return operation.apply(applicationId);
+      return getSparkApplication(applicationId);
     } catch (ApiException apiException) {
       if (apiException.getCode() == 404) {
         return null;
@@ -159,43 +149,40 @@ public class K8StackableSparkController {
     }
   }
 
-  @SneakyThrows
-  public AbstractMap<String, Object> getApplication(String applicationId) {
-    return tryApplicationMethod(this::getSparkApplication, applicationId);
-  }
-
-  private AbstractMap<String, Object> getSparkApplication(String applicationId)
-      throws ApiException {
+  private Object getSparkApplication(String applicationId) throws ApiException {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
-    return (AbstractMap<String, Object>)
-        customObjectsApi.getNamespacedCustomObject(
+    return customObjectsApi
+        .getNamespacedCustomObject(
             STACKABLE_SPARK_GROUP,
             STACKABLE_SPARK_VERSION,
             kubeConfig.getNamespace(),
             STACKABLE_SPARK_PLURAL,
-            applicationId);
+            applicationId)
+        .execute();
   }
 
   @SneakyThrows
-  public AbstractMap<String, Object> stopApplication(String applicationId) {
-    return tryApplicationMethod(this::stopSparkApplication, applicationId);
+  public Object stopApplication(String applicationId) {
+    try {
+      return stopSparkApplication(applicationId);
+    } catch (ApiException apiException) {
+      if (apiException.getCode() == 404) {
+        return null;
+      }
+      throw new RuntimeException(apiException);
+    }
   }
 
-  public AbstractMap<String, Object> stopSparkApplication(String applicationId)
-      throws ApiException {
+  public Object stopSparkApplication(String applicationId) throws ApiException {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
-    return (AbstractMap<String, Object>)
-        customObjectsApi.deleteNamespacedCustomObject(
+    return customObjectsApi
+        .deleteNamespacedCustomObject(
             STACKABLE_SPARK_GROUP,
             STACKABLE_SPARK_VERSION,
             kubeConfig.getNamespace(),
             STACKABLE_SPARK_PLURAL,
-            applicationId,
-            null,
-            null,
-            null,
-            null,
-            null);
+            applicationId)
+        .execute();
   }
 
   private static SparkCrd cloneAndRename(SparkCrd v1Pod, String name) {

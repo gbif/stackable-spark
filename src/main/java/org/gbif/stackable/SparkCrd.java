@@ -1,6 +1,4 @@
 /*
- * Copyright 2023 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,8 +42,9 @@ public class SparkCrd implements ToBuilder {
 
   private Spec spec;
 
+  @Override
   @SneakyThrows
-  public String toYamlString() {
+  public String toString() {
     return MAPPER.writeValueAsString(this);
   }
 
@@ -100,7 +99,9 @@ public class SparkCrd implements ToBuilder {
      * environment needed by the job e.g.
      * docker.stackable.tech/stackable/spark-k8s:3.3.0-stackable0.3.0.
      */
-    @Builder.Default private SparkImage sparkImage = SparkImage.builder().stackableVersion("3.4.0").productVersion("23.11.0").build();
+    @Builder.Default
+    private SparkImage sparkImage =
+        SparkImage.builder().stackableVersion("3.4.0").productVersion("23.11.0").build();
 
     /**
      * Optional Enum (one of Always, IfNotPresent or Never) that determines the pull policy of the
@@ -176,10 +177,9 @@ public class SparkCrd implements ToBuilder {
       public static class Default implements ToBuilder {
 
         private PodOverrides podOverrides;
-
-        }
       }
     }
+  }
 
   @Data
   @Builder(toBuilder = true)
@@ -245,85 +245,85 @@ public class SparkCrd implements ToBuilder {
     }
   }
 
-    @Data
-    @Builder(toBuilder = true)
-    @Jacksonized
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Deps implements ToBuilder {
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Deps implements ToBuilder {
 
-      /** A list of python packages that will be installed via pip. */
-      private List<String> requirements;
+    /** A list of python packages that will be installed via pip. */
+    private List<String> requirements;
 
-      /** A list of packages that is passed directly to spark-submit. */
-      private List<String> packages;
+    /** A list of packages that is passed directly to spark-submit. */
+    private List<String> packages;
 
-      /** A list of excluded packages that is passed directly to spark-submit */
-      private List<String> excludePackages;
+    /** A list of excluded packages that is passed directly to spark-submit */
+    private List<String> excludePackages;
 
-      /** A list of repositories that is passed directly to spark-submit */
-      private List<String> repositories;
-    }
+    /** A list of repositories that is passed directly to spark-submit */
+    private List<String> repositories;
+  }
 
-    @Data
-    @Builder(toBuilder = true)
-    @Jacksonized
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ConfigMap implements ToBuilder {
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class ConfigMap implements ToBuilder {
 
-      private String name;
+    private String name;
 
-      private List<Item> items;
-
-      @Data
-      @Builder(toBuilder = true)
-      @Jacksonized
-      public static class Item implements ToBuilder {
-
-        private String key;
-
-        private String path;
-      }
-    }
+    private List<Item> items;
 
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Volume implements ToBuilder {
+    public static class Item implements ToBuilder {
 
-      /** The volume name. */
-      private String name;
+      private String key;
 
-      /** The persistent volume claim backing the volume. */
-      private PersistentVolumeClaim persistentVolumeClaim;
-
-      private ConfigMap configMap;
-
-      @Data
-      @Builder(toBuilder = true)
-      @Jacksonized
-      @NoArgsConstructor
-      @AllArgsConstructor
-      public static class PersistentVolumeClaim implements ToBuilder {
-
-        /** The persistent volume claim name backing the volume. */
-        private String claimName;
-      }
+      private String path;
     }
+  }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Volume implements ToBuilder {
+
+    /** The volume name. */
+    private String name;
+
+    /** The persistent volume claim backing the volume. */
+    private PersistentVolumeClaim persistentVolumeClaim;
+
+    private ConfigMap configMap;
 
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Job implements ToBuilder {
+    public static class PersistentVolumeClaim implements ToBuilder {
 
-      /** Resources specification for the initiating Job. */
-      private Config config;
+      /** The persistent volume claim name backing the volume. */
+      private String claimName;
     }
+  }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Job implements ToBuilder {
+
+    /** Resources specification for the initiating Job. */
+    private Config config;
+  }
 
   @Data
   @Builder(toBuilder = true)
@@ -339,22 +339,45 @@ public class SparkCrd implements ToBuilder {
     private List<VolumeMount> volumeMounts;
   }
 
-    /** Mounted Volume. */
+  /** Mounted Volume. */
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class VolumeMount implements ToBuilder {
+
+    /** Name of mount. */
+    private String name;
+
+    /** Volume mount path. */
+    private String mountPath;
+
+    /** Volume mount sub-path. */
+    private String subPath;
+  }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Resources implements ToBuilder {
+
+    private Cpu cpu;
+
+    private Memory memory;
+
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class VolumeMount implements ToBuilder {
+    public static class Cpu implements ToBuilder {
 
-      /** Name of mount. */
-      private String name;
+      private String min;
 
-      /** Volume mount path. */
-      private String mountPath;
-
-      /** Volume mount sub-path. */
-      private String subPath;
+      private String max;
     }
 
     @Data
@@ -362,102 +385,85 @@ public class SparkCrd implements ToBuilder {
     @Jacksonized
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Resources implements ToBuilder {
-
-      private Cpu cpu;
-
-      private Memory memory;
-
-      @Data
-      @Builder(toBuilder = true)
-      @Jacksonized
-      @NoArgsConstructor
-      @AllArgsConstructor
-      public static class Cpu implements ToBuilder {
-
-        private String min;
-
-        private String max;
-      }
-
-      @Data
-      @Builder(toBuilder = true)
-      @Jacksonized
-      @NoArgsConstructor
-      @AllArgsConstructor
-      public static class Memory implements ToBuilder {
-        private String limit;
-      }
-    }
-
-    @Data
-    @Builder(toBuilder = true)
-    @Jacksonized
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Driver implements ToBuilder {
-
-      /** Resources specification for the component Pod and list of mounted volumes for the component Pod. */
-      private Config config;
-
-      /**
-       * Driver Pod placement affinity. See <a
-       * href="https://docs.stackable.tech/home/nightly/spark-k8s/usage-guide/pod-placement.html">Pod
-       * placement</a>.
-       */
-      private String affinity;
-
-      /**
-       * Logging aggregation for the driver Pod. See <a
-       * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
-       */
-      private String logging;
-
-      private PodOverrides podOverrides;
-    }
-
-    @Data
-    @Builder(toBuilder = true)
-    @Jacksonized
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Executor implements ToBuilder {
-
-      /** Number of executor launched for this job. */
-      private Integer replicas;
-
-      /** Resources specification for the component Pod and list of mounted volumes for the component Pod. */
-      private Config config;
-
-      /**
-       * Driver Pod placement affinity. See <a
-       * href="https://docs.stackable.tech/home/nightly/spark-k8s/usage-guide/pod-placement.html">Pod
-       * placement</a>.
-       */
-      private String affinity;
-
-      /**
-       * Logging aggregation for the driver Pod. See <a
-       * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
-       */
-      private String logging;
-
-      private PodOverrides podOverrides;
-    }
-
-    @Data
-    @Builder(toBuilder = true)
-    @Jacksonized
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class LogFileDirectory implements ToBuilder {
-
-      /**
-       * S3 bucket definition where applications should publish events for the Spark History server.
-       */
-      private String bucket;
-
-      /** Prefix to use when storing events for the Spark History server. */
-      private String prefix;
+    public static class Memory implements ToBuilder {
+      private String limit;
     }
   }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Driver implements ToBuilder {
+
+    /**
+     * Resources specification for the component Pod and list of mounted volumes for the component
+     * Pod.
+     */
+    private Config config;
+
+    /**
+     * Driver Pod placement affinity. See <a
+     * href="https://docs.stackable.tech/home/nightly/spark-k8s/usage-guide/pod-placement.html">Pod
+     * placement</a>.
+     */
+    private String affinity;
+
+    /**
+     * Logging aggregation for the driver Pod. See <a
+     * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
+     */
+    private String logging;
+
+    private PodOverrides podOverrides;
+  }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Executor implements ToBuilder {
+
+    /** Number of executor launched for this job. */
+    private Integer replicas;
+
+    /**
+     * Resources specification for the component Pod and list of mounted volumes for the component
+     * Pod.
+     */
+    private Config config;
+
+    /**
+     * Driver Pod placement affinity. See <a
+     * href="https://docs.stackable.tech/home/nightly/spark-k8s/usage-guide/pod-placement.html">Pod
+     * placement</a>.
+     */
+    private String affinity;
+
+    /**
+     * Logging aggregation for the driver Pod. See <a
+     * href="https://docs.stackable.tech/home/nightly/concepts/logging.html">Logging</a>.
+     */
+    private String logging;
+
+    private PodOverrides podOverrides;
+  }
+
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class LogFileDirectory implements ToBuilder {
+
+    /**
+     * S3 bucket definition where applications should publish events for the Spark History server.
+     */
+    private String bucket;
+
+    /** Prefix to use when storing events for the Spark History server. */
+    private String prefix;
+  }
+}

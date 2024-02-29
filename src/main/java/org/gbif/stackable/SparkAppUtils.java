@@ -1,6 +1,4 @@
 /*
- * Copyright 2023 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,13 +33,11 @@ public class SparkAppUtils {
   }
 
   static K8StackableSparkController.Phase getPhase(
-      AbstractMap<String, Object> object, K8StackableSparkController.Phase defaultPhase) {
-    if (object.containsKey("status")) {
+      Object object, K8StackableSparkController.Phase defaultPhase) {
+    AbstractMap<String, Object> map = (AbstractMap<String, Object>) object;
+    if (map.containsKey("status")) {
       return K8StackableSparkController.Phase.valueOf(
-          ((AbstractMap<String, Object>) object.get("status"))
-              .get("phase")
-              .toString()
-              .toUpperCase());
+          ((AbstractMap<String, Object>) map.get("status")).get("phase").toString().toUpperCase());
     }
     return defaultPhase;
   }

@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.gbif</groupId>
         <artifactId>motherpom</artifactId>
-        <version>53</version>
+        <version>58-SNAPSHOT</version>
     </parent>
 
     <groupId>org.gbif.stackable</groupId>
@@ -49,12 +49,13 @@
 
     <properties>
         <!-- General settings -->
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <jdkLevel>11</jdkLevel>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependencies -->
-        <io.kubernetes.client.version>18.0.1</io.kubernetes.client.version>
+        <io.kubernetes.client.version>20.0.0</io.kubernetes.client.version>
         <snakeyaml.version>1.27</snakeyaml.version>
         <jackson.version>2.12.2</jackson.version>
         <lombok.version>1.18.28</lombok.version>
@@ -85,11 +86,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <compilerArgs>
-                        <arg>-XepDisableWarningsInGeneratedCode</arg>
-                    </compilerArgs>
-                </configuration>
             </plugin>
         </plugins>
         <testResources>

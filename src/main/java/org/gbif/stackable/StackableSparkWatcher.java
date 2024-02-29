@@ -1,6 +1,4 @@
 /*
- * Copyright 2023 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -73,9 +71,9 @@ public class StackableSparkWatcher implements Runnable, Closeable {
 
   private final EventsListener eventsListener;
 
-  private final Map<String,String> labelSelector;
+  private final Map<String, String> labelSelector;
 
-  private final Map<String,String> fieldSelector;
+  private final Map<String, String> fieldSelector;
 
   private final Pattern nameSelector;
 
@@ -86,20 +84,26 @@ public class StackableSparkWatcher implements Runnable, Closeable {
     return new StackableSparkWatcher(ConfigUtils.loadKubeConfig(kubeConfigFile));
   }
 
-  public StackableSparkWatcher(KubeConfig kubeConfig, EventsListener eventsListener, Map<String,String> labelSelector, Map<String,String> fieldSelector, String nameSelector) {
+  public StackableSparkWatcher(
+      KubeConfig kubeConfig,
+      EventsListener eventsListener,
+      Map<String, String> labelSelector,
+      Map<String, String> fieldSelector,
+      String nameSelector) {
     this.kubeConfig = kubeConfig;
     this.eventsListener = eventsListener;
     this.fieldSelector = fieldSelector;
     this.labelSelector = labelSelector;
-    this.nameSelector = nameSelector != null? Pattern.compile(nameSelector) : null;
+    this.nameSelector = nameSelector != null ? Pattern.compile(nameSelector) : null;
   }
 
-  public StackableSparkWatcher(KubeConfig kubeConfig, EventsListener eventsListener, String nameSelector) {
+  public StackableSparkWatcher(
+      KubeConfig kubeConfig, EventsListener eventsListener, String nameSelector) {
     this.kubeConfig = kubeConfig;
     this.eventsListener = eventsListener;
     this.fieldSelector = Collections.emptyMap();
     this.labelSelector = Collections.emptyMap();
-    this.nameSelector = nameSelector != null? Pattern.compile(nameSelector) : null;
+    this.nameSelector = nameSelector != null ? Pattern.compile(nameSelector) : null;
   }
 
   public StackableSparkWatcher(KubeConfig kubeConfig) {
@@ -140,22 +144,16 @@ public class StackableSparkWatcher implements Runnable, Closeable {
       try (Watch<Object> watch =
           Watch.createWatch(
               client,
-              customObjectsApi.listNamespacedCustomObjectCall(
-                  STACKABLE_SPARK_GROUP,
-                  STACKABLE_SPARK_VERSION,
-                  kubeConfig.getNamespace(),
-                  STACKABLE_SPARK_PLURAL,
-                  null,
-                  null,
-                  null,
-                  toSelectorQuery(fieldSelector),
-                  toSelectorQuery(labelSelector),
-                  null,
-                  null,
-                  null,
-                  null,
-                  Boolean.TRUE,
-                  null),
+              customObjectsApi
+                  .listNamespacedCustomObject(
+                      STACKABLE_SPARK_GROUP,
+                      STACKABLE_SPARK_VERSION,
+                      kubeConfig.getNamespace(),
+                      STACKABLE_SPARK_PLURAL)
+                  .fieldSelector(toSelectorQuery(fieldSelector))
+                  .labelSelector(toSelectorQuery(labelSelector))
+                  .watch(true)
+                  .buildCall(null),
               new TypeToken<Watch.Response<Object>>() {}.getType())) {
         // Gets the watch response and calls the listener
         for (Watch.Response<Object> item : watch) {
@@ -175,18 +173,20 @@ public class StackableSparkWatcher implements Runnable, Closeable {
     }
   }
 
-  /**
-   * Matches a string to the name pattern.
-   * Null name selector matches all applications.
-   */
+  /** Matches a string to the name pattern. Null name selector matches all applications. */
   private boolean matchesNameSelector(String appName) {
     return nameSelector == null || nameSelector.matcher(appName).matches();
   }
 
-  /** Takes a K8 selector Map<String,String> and returns a string in the format: key1=value1,..,keyN=valueN. */
-  private String toSelectorQuery(Map<String,String> selector) {
+  /**
+   * Takes a K8 selector Map<String,String> and returns a string in the format:
+   * key1=value1,..,keyN=valueN.
+   */
+  private String toSelectorQuery(Map<String, String> selector) {
     if (selector != null && !selector.isEmpty()) {
-      return selector.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(","));
+      return selector.entrySet().stream()
+          .map(e -> e.getKey() + "=" + e.getValue())
+          .collect(Collectors.joining(","));
     }
     return null;
   }
