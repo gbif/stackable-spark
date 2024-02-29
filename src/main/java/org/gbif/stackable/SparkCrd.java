@@ -215,6 +215,9 @@ public class SparkCrd implements ToBuilder {
         @JsonProperty("yunikorn.apache.org/task-groups")
         private String taskGroups;
 
+        @JsonProperty("yunikorn.apache.org/user.info")
+        private String userInfo;
+
         // Helps convert yunikorn json task-groups, but not used directly
         @Data
         @Builder(toBuilder = true)
