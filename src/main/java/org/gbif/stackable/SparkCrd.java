@@ -200,46 +200,29 @@ public class SparkCrd implements ToBuilder {
       /** Labels to be added to the K8 Pod or custom resource. */
       @Builder.Default private Map<String, String> labels = Collections.emptyMap();
 
-      private Annotations annotations;
+      @Builder.Default private Map<String, String> annotations = Collections.emptyMap();
 
+      // Helps convert yunikorn json task-groups, but not used directly
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
       @NoArgsConstructor
       @AllArgsConstructor
-      public static class Annotations implements ToBuilder {
+      public static class TaskGroup implements ToBuilder {
 
-        @JsonProperty("yunikorn.apache.org/task-group-name")
-        private String taskGroupName;
+        private String name;
+        private String minMember;
+        private MinResource minResource;
 
-        @JsonProperty("yunikorn.apache.org/task-groups")
-        private String taskGroups;
-
-        @JsonProperty("yunikorn.apache.org/user.info")
-        private String userInfo;
-
-        // Helps convert yunikorn json task-groups, but not used directly
         @Data
         @Builder(toBuilder = true)
         @Jacksonized
         @NoArgsConstructor
         @AllArgsConstructor
-        public static class TaskGroup implements ToBuilder {
+        public static class MinResource implements ToBuilder {
 
-          private String name;
-          private String minMember;
-          private MinResource minResource;
-
-          @Data
-          @Builder(toBuilder = true)
-          @Jacksonized
-          @NoArgsConstructor
-          @AllArgsConstructor
-          public static class MinResource implements ToBuilder {
-
-            private String cpu;
-            private String memory;
-          }
+          private String cpu;
+          private String memory;
         }
       }
     }
