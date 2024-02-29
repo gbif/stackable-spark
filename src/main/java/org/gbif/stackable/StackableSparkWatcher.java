@@ -157,7 +157,7 @@ public class StackableSparkWatcher implements Runnable, Closeable {
               new TypeToken<Watch.Response<Object>>() {}.getType())) {
         // Gets the watch response and calls the listener
         for (Watch.Response<Object> item : watch) {
-          AbstractMap<String, Object> object = (AbstractMap<String, Object>) item.object;
+          Map<String, Object> object = (AbstractMap<String, Object>) item.object;
           EventType eventType = EventType.valueOf(item.type);
           K8StackableSparkController.Phase phase = getPhase(object);
           String appName = getAppName(object);

@@ -14,6 +14,7 @@
 package org.gbif.stackable;
 
 import java.util.AbstractMap;
+import java.util.Map;
 
 /** Common methods and constants used to interact with Stackable Spark Applications. */
 public class SparkAppUtils {
@@ -21,7 +22,7 @@ public class SparkAppUtils {
   static final String STACKABLE_SPARK_VERSION = "v1alpha1";
   static final String STACKABLE_SPARK_PLURAL = "sparkapplications";
 
-  static K8StackableSparkController.Phase getPhase(AbstractMap<String, Object> object) {
+  static K8StackableSparkController.Phase getPhase(Map<String, Object> object) {
     if (object.containsKey("status")) {
       return K8StackableSparkController.Phase.valueOf(
           ((AbstractMap<String, Object>) object.get("status"))
@@ -34,7 +35,7 @@ public class SparkAppUtils {
 
   static K8StackableSparkController.Phase getPhase(
       Object object, K8StackableSparkController.Phase defaultPhase) {
-    AbstractMap<String, Object> map = (AbstractMap<String, Object>) object;
+    Map<String, Object> map = (AbstractMap<String, Object>) object;
     if (map.containsKey("status")) {
       return K8StackableSparkController.Phase.valueOf(
           ((AbstractMap<String, Object>) map.get("status")).get("phase").toString().toUpperCase());
@@ -42,7 +43,7 @@ public class SparkAppUtils {
     return defaultPhase;
   }
 
-  static String getAppName(AbstractMap<String, Object> object) {
+  static String getAppName(Map<String, Object> object) {
     return (String) ((AbstractMap<String, Object>) object.get("metadata")).get("name");
   }
 }
