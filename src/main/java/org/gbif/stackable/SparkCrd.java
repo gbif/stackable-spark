@@ -211,7 +211,7 @@ public class SparkCrd implements ToBuilder {
       public static class TaskGroup implements ToBuilder {
 
         private String name;
-        private String minMember;
+        private Integer minMember;
         private MinResource minResource;
 
         @Data
