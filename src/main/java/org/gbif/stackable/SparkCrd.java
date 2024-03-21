@@ -122,11 +122,14 @@ public class SparkCrd implements ToBuilder {
     /** The main class i.e. entry point for JVM artifacts */
     private String mainClass;
 
+    /** The vector config name */
+    private String vectorAggregatorConfigMapName;
+
     /** Arguments passed directly to the job artifact. */
     private List<String> args;
 
     /** S3 connection specification. See the S3 resources for more details. */
-    private String s3connection;
+    private S3Connection s3connection;
 
     /** A map of key/value strings that will be passed directly to spark-submit. */
     private Map<String, String> sparkConf;
@@ -157,6 +160,37 @@ public class SparkCrd implements ToBuilder {
     public static class SparkImage implements ToBuilder {
       private String productVersion;
       private String stackableVersion;
+    }
+
+    @Data
+    @Builder(toBuilder = true)
+    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class S3Connection implements ToBuilder {
+
+      private Inline inline;
+
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public static class Inline implements ToBuilder {
+        private String host;
+        private Integer port;
+        private String accessStyle;
+        private Credentials credentials;
+
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Credentials implements ToBuilder {
+          private String secretClass;
+        }
+      }
     }
 
     @Data
@@ -498,12 +532,38 @@ public class SparkCrd implements ToBuilder {
   @AllArgsConstructor
   public static class LogFileDirectory implements ToBuilder {
 
-    /**
-     * S3 bucket definition where applications should publish events for the Spark History server.
-     */
-    private String bucket;
+    private Directory s3;
 
-    /** Prefix to use when storing events for the Spark History server. */
-    private String prefix;
+    @Data
+    @Builder(toBuilder = true)
+    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Directory implements ToBuilder {
+
+      private Bucket bucket;
+
+      /** Prefix to use when storing events for the Spark History server. */
+      private String prefix;
+
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public static class Bucket implements ToBuilder {
+
+        private Inline inline;
+
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Inline implements ToBuilder {
+          private String bucketName;
+        }
+      }
+    }
   }
 }
