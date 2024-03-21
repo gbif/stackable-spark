@@ -283,6 +283,20 @@ spec:
           max: "1"
         memory:
           limit: "1Gi"
+      logging:
+        enableVectorAgent: true
+        containers:
+          vector:
+            file:
+              level: "WARN"
+          spark:
+            console:
+              level: "INFO"
+            file:
+              level: "INFO"
+            loggers:
+              ROOT:
+                level: "INFO"
       volumeMounts:
         - name: hadoop-env
           mountPath: /etc/hadoop/conf/core-site.xml
@@ -321,6 +335,20 @@ spec:
           max: "1"
         memory:
           limit: "1Gi"
+      logging:
+        enableVectorAgent: true
+        containers:
+          vector:
+            file:
+              level: "WARN"
+          spark:
+            console:
+              level: "INFO"
+            file:
+              level: "INFO"
+            loggers:
+              ROOT:
+                level: "INFO"
       volumeMounts:
         - name: hadoop-env
           mountPath: /etc/hadoop/conf/core-site.xml

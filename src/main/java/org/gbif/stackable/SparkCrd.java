@@ -13,15 +13,13 @@
  */
 package org.gbif.stackable;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import lombok.*;
 import lombok.extern.jackson.Jacksonized;
 
@@ -320,6 +318,8 @@ public class SparkCrd implements ToBuilder {
 
     /** A list of mounted volumes for the component Pod. */
     private List<VolumeMount> volumeMounts;
+
+    private Logging logging;
   }
 
   /** Mounted Volume. */
@@ -370,6 +370,61 @@ public class SparkCrd implements ToBuilder {
     @AllArgsConstructor
     public static class Memory implements ToBuilder {
       private String limit;
+    }
+  }
+
+  /** Mounted Volume. */
+  @Data
+  @Builder(toBuilder = true)
+  @Jacksonized
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Logging implements ToBuilder {
+
+    private boolean enableVectorAgent;
+
+    private Containers containers;
+
+    @Data
+    @Builder(toBuilder = true)
+    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Containers implements ToBuilder {
+
+      private LogSource vector;
+      private LogSource spark;
+
+      @Data
+      @Builder(toBuilder = true)
+      @Jacksonized
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public static class LogSource implements ToBuilder {
+        private Log file;
+        private Log console;
+        private Loggers loggers;
+
+        @Data
+        @Builder(toBuilder = true)
+        @Jacksonized
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Loggers implements ToBuilder {
+
+          @JsonProperty("ROOT")
+          private Log root;
+        }
+      }
+    }
+
+    @Data
+    @Builder(toBuilder = true)
+    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Log implements ToBuilder {
+      private String level;
     }
   }
 
