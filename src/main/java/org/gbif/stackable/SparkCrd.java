@@ -417,7 +417,7 @@ public class SparkCrd implements ToBuilder {
   @AllArgsConstructor
   public static class Logging implements ToBuilder {
 
-    private boolean enableVectorAgent;
+    private Boolean enableVectorAgent;
 
     private Containers containers;
 
